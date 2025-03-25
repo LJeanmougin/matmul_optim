@@ -8,47 +8,34 @@
 
 int main()
 {
-  float *A, *B, *cpuC, *gpuC;
+  float *A, *B, *gpuC, *cpuC;
 
   A = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
   B = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
-  cpuC = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
   gpuC = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
+  cpuC = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
 
   randomize_matrix(A, MAT_SIZE * MAT_SIZE);
   randomize_matrix(B, MAT_SIZE * MAT_SIZE);
-  randomize_matrix(cpuC, MAT_SIZE * MAT_SIZE);
-  copy_matrix(gpuC, cpuC, MAT_SIZE * MAT_SIZE);
-  
-  verify_matrix(gpuC, cpuC, MAT_SIZE * MAT_SIZE);
-  
-  // CPU Version for reference
+  randomize_matrix(gpuC, MAT_SIZE * MAT_SIZE);
+
+  copy_matrix(cpuC, gpuC, MAT_SIZE * MAT_SIZE);
+
+  // sgemm_cpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, cpuC);
+    
   auto start = std::chrono::high_resolution_clock::now();
   
-  sgemm_cpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, cpuC);
+  sgemm_gpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, gpuC, sgemm_naive);
   
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-  std::cout << "Monothread CPU duration : " << duration.count()/1000000.0f << " seconds" << std::endl;
-  
-  // GPU Version (Taking into account copy operations)
 
-  start = std::chrono::high_resolution_clock::now();
-  
-  sgemm_gpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, gpuC);
-  
-  stop = std::chrono::high_resolution_clock::now();
-  duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-  std::cout << "Kernel duration : " << duration.count()/1000000.0f << " seconds" << std::endl;
+  std::cout << "New version : " << duration.count()/1000000.0f << " seconds" << std::endl;
 
-  if(verify_matrix(gpuC, cpuC, MAT_SIZE * MAT_SIZE))
-  {
-    std::cout << "Valid result" << std::endl;
-  }
+  verify_matrix(cpuC, gpuC, MAT_SIZE * MAT_SIZE);
 
   free(A);
   free(B);
-  free(cpuC);
   free(gpuC);
 
   return 0;
