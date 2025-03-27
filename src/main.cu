@@ -9,6 +9,10 @@
 int main()
 {
   float *A, *B, *gpuC, *cpuC;
+  std::ofstream fs("./log.txt");
+  auto start = std::chrono::high_resolution_clock::now();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
   A = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
   B = (float *) malloc (MAT_SIZE * MAT_SIZE * sizeof(float));
@@ -21,22 +25,39 @@ int main()
 
   copy_matrix(cpuC, gpuC, MAT_SIZE * MAT_SIZE);
 
+  print_matrix(gpuC, MAT_SIZE, MAT_SIZE, fs);
+
+  
+    // COALESCED KERNEL
+    start = std::chrono::high_resolution_clock::now();
+    
+    sgemm_gpu_coal(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, cpuC);
+    
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  
+    print_matrix(cpuC, MAT_SIZE, MAT_SIZE, fs);
+    std::cout << "Coal version : " << duration.count()/1000000.0f << " seconds" << std::endl;
   // sgemm_cpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, cpuC);
     
-  auto start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
   
-  sgemm_gpu(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, gpuC, sgemm_naive);
+  sgemm_gpu_naive(MAT_SIZE, MAT_SIZE, MAT_SIZE, 0.2, A, B, 0.3, gpuC);
   
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  
+  stop = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
-  std::cout << "New version : " << duration.count()/1000000.0f << " seconds" << std::endl;
+  print_matrix(gpuC, MAT_SIZE, MAT_SIZE, fs);
+  std::cout << "Naive version : " << duration.count()/1000000.0f << " seconds" << std::endl;
+
 
   verify_matrix(cpuC, gpuC, MAT_SIZE * MAT_SIZE);
 
   free(A);
   free(B);
   free(gpuC);
+  free(cpuC);
 
   return 0;
 }

@@ -6,18 +6,20 @@
 
 int div_ceil(int numerator, int denominator);
 
-__global__ void sgemm_naive(int M, int N, int K, float alpha,
+__global__ void sgemm_naive_kernel(int M, int N, int K, float alpha,
                             float *A, float *B, float beta, float *C);
 
-__global__ void siboehm_naive(int M, int N, int K, float alpha,
+__global__ void siboehm_naive_kernel(int M, int N, int K, float alpha,
                               float *A, float *B, float beta, float *C);
 
-__global__ void sgemm_coalesced(int M, int N, int K, float alpha,
+__global__ void sgemm_coalesced_kernel(int M, int N, int K, float alpha,
                                 float *A, float *B, float beta, float *C);
 
-void sgemm_gpu(int M, int N, int K, float alpha,
-               float *A, float *B, float beta, float *C,
-               void (*kernel)(int, int, int, float, float *, float *, float, float *));
+void sgemm_gpu_naive(int M, int N, int K, float alpha,
+                     float *A, float *B, float beta, float *C);
+
+void sgemm_gpu_coal(int M, int N, int K, float alpha,
+                     float *A, float *B, float beta, float *C);
 
 void sgemm_cpu(int M, int N, int K, float alpha,
                float *A, float *B, float beta, float *C);
